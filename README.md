@@ -28,6 +28,28 @@ Docker Compose runs the Spring Boot app and a separate MySQL container. You do n
 
 To stop the containers, press **Ctrl+C** and run `docker compose down`. The Docker MySQL database is separate from a MySQL Server already installed on your PC. In Workbench, connect to host `127.0.0.1`, port `3307`, database `smartgroup`, and the `DB_USER`/`DB_PASSWORD` values from `.env` to view the Docker database.
 
+### Connect Docker to the MySQL Server already on this PC
+
+If you want the Docker app to use your existing PC database instead of creating a separate MySQL container:
+
+1. In MySQL Workbench, create the `smartgroup` database if needed and create a dedicated app user. Replace the password placeholder with a private password:
+
+   ```sql
+   CREATE DATABASE IF NOT EXISTS smartgroup;
+   CREATE USER 'smartgroup_app'@'%' IDENTIFIED BY 'choose-a-private-password';
+   GRANT ALL PRIVILEGES ON smartgroup.* TO 'smartgroup_app'@'%';
+   ```
+
+2. Copy `.env.example` to `.env`. Set `DB_USER=smartgroup_app`, set `DB_PASSWORD` to the password you chose, and keep `DB_URL` pointing at `host.docker.internal`. Do not commit `.env`.
+3. Ensure MySQL Server is running and permits connections from Docker Desktop. If the connection fails, check that MySQL is listening on the host network interface and that Windows Firewall permits local Docker Desktop connections.
+4. Stop the old JAR if it uses port 8080, then run this from the repository folder:
+
+   ```powershell
+   docker compose -f compose.host-db.yaml up --build
+   ```
+
+This mode uses the same `smartgroup` database you can inspect in Workbench. Stop it with **Ctrl+C**. Use `compose.yaml` without the host-db option if you prefer a separate MySQL container.
+
 ## Run with MySQL on your PC
 
 The MySQL-backed mode uses the included Spring Boot API. Install and start **MySQL Server** (Workbench is the client used to manage it), then create the database in a Workbench query tab:
