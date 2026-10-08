@@ -1,0 +1,9 @@
+.idea/
+.build_smartgroup/
+output/
+target/
+.env
+.env.*
+!.env.example
+*.log
+
