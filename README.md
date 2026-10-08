@@ -2,7 +2,7 @@
 
 A browser-based team planning and analysis demo with separate Team Leader and Team Member accounts.
 
-## Start the app
+## Run the browser-only demo
 
 1. Extract this folder.
 2. Open `index.html` in a current browser.
@@ -10,6 +10,24 @@ A browser-based team planning and analysis demo with separate Team Leader and Te
 4. Create the first Team Leader account. The first leader sets a leader access code; additional leaders need that code.
 5. Save the recovery key shown once after registration. Use **Forgot password?** on the sign-in form with your email, recovery key and new password. Older demo accounts receive a recovery key the next time they sign in.
 6. To create a Team Member account, enter the member's name, email, skills, skill level and password. The new profile is added to the roster with those skills.
+
+## Run with MySQL on your PC
+
+The MySQL-backed mode uses the included Spring Boot API. Install and start **MySQL Server** (Workbench is the client used to manage it), then create the database in a Workbench query tab:
+
+```sql
+CREATE DATABASE smartgroup;
+```
+
+From the repository folder containing `pom.xml`, open PowerShell and set the MySQL credentials for that window. Replace `your MySQL password` with the password for your MySQL user; do not put it in this repository:
+
+```powershell
+$env:DB_USER="root"
+$env:DB_PASSWORD="your MySQL password"
+mvn spring-boot:run
+```
+
+Open `http://localhost:8080`. The app runs its `schema.sql` on startup and saves accounts, projects, members and tasks to MySQL. Registration creates a recovery key; save it because **Forgot password?** uses it to reset the database account password.
 
 ## What it includes
 
@@ -28,7 +46,7 @@ A browser-based team planning and analysis demo with separate Team Leader and Te
 
 ## Demo data and storage
 
-The browser version saves demo accounts, password hashes, recovery-key hashes and workspace data in that browser's local storage. Different browsers or devices do not sync. A recovery key is shown only once and must be kept by the user; this offline demo cannot send reset emails. This makes it suitable for a local demo; shared multi-user deployment needs a connected server and database. The included Java files are API source and are not connected to the browser demo by default. Team analysis and assistant responses use local rules, do not call an external AI service, and cannot answer live or unrelated world-knowledge questions.
+The browser-only demo saves accounts and workspace data in that browser's local storage. MySQL-backed mode is available when the site is served by the local Spring Boot app at `http://localhost:8080`. GitHub Pages cannot connect to a MySQL Server running only on your PC; a live shared site needs a hosted backend and database. Team analysis and assistant responses use local rules, do not call an external AI service, and cannot answer live or unrelated world-knowledge questions.
 
 The starter workspace opens with sample members, projects and tasks. Create a leader account first to explore the management controls.
 

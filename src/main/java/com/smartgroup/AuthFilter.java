@@ -33,7 +33,8 @@ public class AuthFilter extends OncePerRequestFilter {
         }
         String path = req.getRequestURI();
         boolean open = path.equals("/api/auth/login") || path.equals("/api/auth/register")
-                || path.equals("/api/auth/config") || !path.startsWith("/api/");
+                || path.equals("/api/auth/config") || path.equals("/api/auth/password/reset")
+                || !path.startsWith("/api/");
         if (open) {
             chain.doFilter(req, res);
             return;

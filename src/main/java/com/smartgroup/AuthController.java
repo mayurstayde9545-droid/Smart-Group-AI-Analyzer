@@ -5,6 +5,7 @@ import java.security.SecureRandom;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -19,8 +20,10 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    public record RegisterReq(String name, String email, String password, String role, String leaderCode) {}
+    public record RegisterReq(String name, String email, String password, String role, String leaderCode,
+            List<String> skills, String exp, String recoveryCode) {}
     public record LoginReq(String email, String password, String role) {}
+    public record ResetReq(String email, String recoveryCode, String password) {}
 
     private final JdbcTemplate db;
     private final BCryptPasswordEncoder enc = new BCryptPasswordEncoder();
@@ -49,6 +52,7 @@ public class AuthController {
         if (name.isEmpty()) throw bad("Enter your full name.");
         if (!email.matches("^\\S+@\\S+\\.\\S+$")) throw bad("Enter a valid email address.");
         if (r.password() == null || r.password().length() < 8) throw bad("Password must be at least 8 characters.");
+        if (r.recoveryCode() == null || r.recoveryCode().length() < 8) throw bad("A recovery key is required.");
         Integer exists = db.queryForObject("SELECT COUNT(*) FROM users WHERE email = ?", Integer.class, email);
         if (exists != null && exists > 0)
             throw new ResponseStatusException(HttpStatus.CONFLICT, "An account with this email already exists. Log in instead.");
@@ -66,11 +70,13 @@ public class AuthController {
             return ps;
         }, kh);
         long id = kh.getKey().longValue();
+        db.update("INSERT INTO account_recovery(user_id, recovery_hash) VALUES (?,?)", id, enc.encode(r.recoveryCode()));
 
         if (role.equals("member")) { // every team member gets a member card automatically
             Long memberId = db.queryForObject(StateController.NEXT_ID, Long.class);
             db.update("INSERT INTO members(id, name, job_role, skills, exp_level, availability, user_id) VALUES (?,?,?,?,?,?,?)",
-                memberId, name, "Team member", "", "Beginner", "Available", id);
+                memberId, name, "Team member", String.join(",", r.skills() == null ? List.of() : r.skills()),
+                r.exp() == null || r.exp().isBlank() ? "Beginner" : r.exp(), "Available", id);
         }
         return session(id, name, email, role);
     }
@@ -96,6 +102,18 @@ public class AuthController {
     @PostMapping("/logout")
     public Map<String, Object> logout(HttpServletRequest req) {
         db.update("DELETE FROM sessions WHERE token = ?", req.getAttribute("token"));
+        return Map.of("ok", true);
+    }
+
+    @PostMapping("/password/reset")
+    @Transactional
+    public Map<String, Object> resetPassword(@RequestBody ResetReq r) {
+        String email = r.email() == null ? "" : r.email().trim().toLowerCase();
+        if (r.password() == null || r.password().length() < 8) throw bad("Password must be at least 8 characters.");
+        var rows = db.queryForList("SELECT u.id, r.recovery_hash FROM users u JOIN account_recovery r ON r.user_id = u.id WHERE u.email = ?", email);
+        if (rows.isEmpty() || r.recoveryCode() == null || !enc.matches(r.recoveryCode(), (String) rows.get(0).get("recovery_hash")))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Email or recovery key is incorrect.");
+        db.update("UPDATE users SET password_hash = ? WHERE id = ?", enc.encode(r.password()), rows.get(0).get("id"));
         return Map.of("ok", true);
     }
 
