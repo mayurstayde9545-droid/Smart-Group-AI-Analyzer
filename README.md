@@ -11,6 +11,23 @@ A browser-based team planning and analysis demo with separate Team Leader and Te
 5. Save the recovery key shown once after registration. Use **Forgot password?** on the sign-in form with your email, recovery key and new password. Older demo accounts receive a recovery key the next time they sign in.
 6. To create a Team Member account, enter the member's name, email, skills, skill level and password. The new profile is added to the roster with those skills.
 
+
+## Run the full app with Docker Desktop
+
+Docker Compose runs the Spring Boot app and a separate MySQL container. You do not need Maven or MySQL Server installed on your PC; Docker Desktop must be open and its engine running.
+
+1. Copy `.env.example` to `.env` and replace both example passwords with private values. Do not commit `.env` to GitHub.
+2. If the app is already running from a JAR in another PowerShell window, stop it with **Ctrl+C** so Docker can use port 8080.
+3. In PowerShell, from the folder containing `compose.yaml`, run:
+
+   ```powershell
+   docker compose up --build
+   ```
+
+4. Open `http://localhost:8080`. Docker creates the tables at startup and stores its database in a persistent volume.
+
+To stop the containers, press **Ctrl+C** and run `docker compose down`. The Docker MySQL database is separate from a MySQL Server already installed on your PC. In Workbench, connect to host `127.0.0.1`, port `3307`, database `smartgroup`, and the `DB_USER`/`DB_PASSWORD` values from `.env` to view the Docker database.
+
 ## Run with MySQL on your PC
 
 The MySQL-backed mode uses the included Spring Boot API. Install and start **MySQL Server** (Workbench is the client used to manage it), then create the database in a Workbench query tab:
