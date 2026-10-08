@@ -24,8 +24,10 @@ From the repository folder containing `pom.xml`, open PowerShell and set the MyS
 ```powershell
 $env:DB_USER="root"
 $env:DB_PASSWORD="your MySQL password"
-mvn spring-boot:run
+.\mvnw.cmd spring-boot:run
 ```
+
+The first run downloads the included Maven version automatically. Java 17 and an internet connection are required.
 
 Open `http://localhost:8080`. The app runs its `schema.sql` on startup and saves accounts, projects, members and tasks to MySQL. Registration creates a recovery key; save it because **Forgot password?** uses it to reset the database account password.
 
@@ -49,4 +51,3 @@ Open `http://localhost:8080`. The app runs its `schema.sql` on startup and saves
 The browser-only demo saves accounts and workspace data in that browser's local storage. MySQL-backed mode is available when the site is served by the local Spring Boot app at `http://localhost:8080`. GitHub Pages cannot connect to a MySQL Server running only on your PC; a live shared site needs a hosted backend and database. Team analysis and assistant responses use local rules, do not call an external AI service, and cannot answer live or unrelated world-knowledge questions.
 
 The starter workspace opens with sample members, projects and tasks. Create a leader account first to explore the management controls.
-
