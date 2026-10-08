@@ -13,7 +13,7 @@ t:[{id:1,title:'Create Dashboard UI',as:2,pr:'High',st:'doing',dl:day(3),pj:1,sk
 {id:4,title:'Write E2E tests',as:0,pr:'Low',st:'todo',dl:day(14),pj:1,sk:['testing','selenium']},
 {id:5,title:'Design DB schema',as:1,pr:'Medium',st:'done',dl:day(-4),pj:1,sk:['sql']}],n:10});
 const API_BASE=(window.SMARTGROUP_API_URL||'').replace(/\/$/,'');
-const API_MODE=!!API_BASE||location.hostname==='localhost'||location.hostname==='127.0.0.1';
+const API_MODE=!!API_BASE||location.hostname==='localhost'||location.hostname==='127.0.0.1'||(location.protocol.startsWith('http')&&!location.hostname.endsWith('github.io'));
 function apiToken(){try{return sessionStorage.getItem('sg-api-token')||''}catch(e){return ''}}
 async function apiReq(path,options={}){const headers={'Content-Type':'application/json',...(options.headers||{})},token=apiToken();if(token)headers.Authorization='Bearer '+token;let response;try{response=await fetch(API_BASE+path,{...options,headers})}catch(e){throw new Error('Cannot reach the MySQL backend. Start the Spring Boot app at http://localhost:8080.')}let data={};try{data=await response.json()}catch(e){}if(!response.ok)throw new Error(data.detail||data.message||data.error||('Request failed ('+response.status+').'));return data}
 async function loadDatabaseState(user){const remote=await apiReq('/api/state');if(!(remote.m?.length||remote.p?.length||remote.t?.length)&&user.role==='leader'){S=seed();S.lead=S.lead||[];S.notices=[];await apiReq('/api/state',{method:'PUT',body:JSON.stringify(S)})}else{S={...remote,lead:S.lead||[],notices:Array.isArray(S.notices)?S.notices:[]};S.n=Math.max(1,+S.n||1)}}
